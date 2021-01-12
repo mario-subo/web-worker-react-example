@@ -1,53 +1,63 @@
-import logo from './logo.svg';
-import { useEffect, useRef } from 'react';
+import { useEffect, useState } from 'react';
 import './App.css';
 
-function createWorker() {
-  var blob = new Blob([`
-  self.addEventListener('message', e => {
-    if (e.data) {
-      self.postMessage("This is the worker. I have recieved: " + e.data);
-    }
-  })
-  `], { type: "text/javascript" });
-  var url = URL.createObjectURL(blob);
-  
-  return new Worker(url);
-}
+const worker = new Worker("./worker.js")
 
 function App() {
-  const workerRef = useRef(createWorker());
+  const [data, setData] = useState(null);
+  const [loading, setLoading] = useState(false);
 
   useEffect(() => {
-    if (workerRef.current) {
-      workerRef.current.addEventListener("message", e => {
-        console.log(e.data);
+    if (worker) {
+      worker.addEventListener("message", e => {
+        setLoading(false);
+        setData(e.data);
       })
-  
-      workerRef.current.addEventListener("error", e => {
-        console.warn(e);
+
+      worker.addEventListener("error", e => {
+        console.error(e);
       })
-      
+
+      return () => worker.terminate()
     }
   }, [])
 
-  const handlePostMessageClick = e => {
-    workerRef.current.postMessage("Hello World!")
+  // EXAMPLE 2: ===================
+
+  // Example of a heavy computation which would block the UI if executed on the main thread
+  const heavilyComputatedValue = () => {
+    var x = 0;
+    for (var i = 0; i < 999999999; i++) {
+      x = x + i;
+    }
+    return x;
+  }
+
+
+  const loadResult = e => {
+    setLoading(true);
+    setData(null);
+
+    // EXAMPLE A
+    const value = heavilyComputatedValue();
+    setData(value);
+    setLoading(false);
+
+
+    // EXAMPLE B
+    // worker.postMessage(null)
   }
 
   return (
-    <div className="App">
-      <header className="App-header">
-        <img src={logo} className="App-logo" alt="logo" />
-        <p>
-          Edit <code>src/App.js</code> and save to reload.
-        </p>
-        <button
-          onClick={handlePostMessageClick}
-        >
-          Post message to Worker
+    <div style={{ display: "grid", gridTemplateRows: "1fr 1fr 2fr 10fr" }}>
+      {(!data && loading) ? <p>loading</p> : <p>{data}</p>}
+
+      <button
+        style={{ cursor: "pointer" }}
+        onClick={loadResult}
+      >
+        Load result
         </button>
-      </header>
     </div>
   );
 }
