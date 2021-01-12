@@ -1,24 +1,39 @@
 import logo from './logo.svg';
+import { useEffect, useRef } from 'react';
 import './App.css';
-import workerFile from './worker.js'
-// console.log(workerFile)
-function createWorker(fn) {
-  var blob = new Blob(["self.onmessage =", fn.toString()], { type: "text/javascript" });
+
+function createWorker() {
+  var blob = new Blob([`
+  self.addEventListener('message', e => {
+    if (e.data) {
+      self.postMessage("This is the worker. I have recieved: " + e.data);
+    }
+  })
+  `], { type: "text/javascript" });
   var url = URL.createObjectURL(blob);
   
   return new Worker(url);
 }
 
 function App() {
-  const worker = createWorker(workerFile);
+  const workerRef = useRef(createWorker());
 
-  worker.addEventListener("message", e => {
-    console.log(e);
-  })
+  useEffect(() => {
+    if (workerRef.current) {
+      workerRef.current.addEventListener("message", e => {
+        console.log(e.data);
+      })
+  
+      workerRef.current.addEventListener("error", e => {
+        console.warn(e);
+      })
+      
+    }
+  }, [])
 
-  worker.addEventListener("error", e => {
-    console.warn(e);
-  })
+  const handlePostMessageClick = e => {
+    workerRef.current.postMessage("Hello World!")
+  }
 
   return (
     <div className="App">
@@ -27,14 +42,11 @@ function App() {
         <p>
           Edit <code>src/App.js</code> and save to reload.
         </p>
-        <a
-          className="App-link"
-          href="https://reactjs.org"
-          target="_blank"
-          rel="noopener noreferrer"
+        <button
+          onClick={handlePostMessageClick}
         >
-          Learn React
-        </a>
+          Post message to Worker
+        </button>
       </header>
     </div>
   );
