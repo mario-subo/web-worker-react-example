@@ -63,3 +63,42 @@ function App() {
 }
 
 export default App;
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+// // INLINE WORKER EXAMPLE ========
+// const createInlineWorker = (workerFunc) => {
+//   const workerFunctionBody = workerFunc.toString().replace(/^[^{]*{\s*/, '').replace(/\s*}[^}]*$/, '');
+
+//   return new Worker(URL.createObjectURL(
+//     new Blob([workerFunctionBody], { type: 'text/javascript' })
+//   ));
+// }
+
+// const worker = createInlineWorker(() => {
+//   function heavilyComputatedValue() {
+//     var x = 0;
+//     for (var i = 0; i < 999999999; i++) {
+//       x = x + i;
+//     }
+//     return x;
+//   }
+
+//   // eslint-disable-next-line no-restricted-globals
+//   self.addEventListener('message', e => {
+//     // eslint-disable-next-line no-restricted-globals
+//     self.postMessage(heavilyComputatedValue());
+//   })
+// })
